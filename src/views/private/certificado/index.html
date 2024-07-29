@@ -1,0 +1,41 @@
+<?!= include('src/views/private/certificado/css') ?>
+<div class="container">
+  <div class="card mt-3">
+    <div class="card-header">
+      <h3>Certificado</h3>
+    </div>
+    <div class="card-body">
+      <!--div class="row">
+        <div class="col">
+          <label for="selectAno">Ano:</label>
+          <select class="custom-select custom-select-md mb-3" id="selectAno">
+            <option selected value="">Selecione</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="selectPrograma">Programa:</label>
+          <select class="custom-select custom-select-md mb-3" id="selectPrograma">
+            <option selected value="">Selecione</option>
+          </select>
+        </div>
+        <div class="col">
+          <label for="selectTurma">Turma:</label>
+          <select class="custom-select custom-select-md mb-3" id="selectTurma">
+            <option selected value="">Selecione</option>
+          </select>
+        </div>
+      </div-->
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header mt-3">
+      <button class="btn btn-primary" onclick="salvarFrequencia()" type="submit">
+          <i class="fa fa-save"></i> Salvar
+        </button>
+    </div>
+    <div class="card-body mt-3">
+      <table class="table" id="tabela"></table>
+    </div>
+  </div>
+</div>
+<?!= include('src/views/private/certificado/script') ?>

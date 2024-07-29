@@ -1,0 +1,27 @@
+{
+  "name": "qualifica",
+  "version": "1.0.0",
+  "description": "Link para teste:\r https://script.google.com/macros/s/AKfycbwPjcibgI2srAi2oUU7vDjWzrZ7HofTMQuN6dixVAo/dev",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode none",
+    "gopen": "clasp open --webapp",
+    "gpush": "npm run build && clasp push",
+    "gpull": "clasp pull",
+    "gclone": "clasp clone 1sU_YmoMy5Jl75hW-6hTdoSvkQEmSEk6Hx_hrAdqEorirpB54ppNfqMrN",
+    "gwatch": "clasp pull --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@googleapis/drive": "^5.0.2",
+    "@types/node": "^18.15.13",
+    "gas-webpack-plugin": "^2.4.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.80.0",
+    "webpack-cli": "^5.0.2"
+  }
+}

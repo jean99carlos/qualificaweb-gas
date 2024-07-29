@@ -1,0 +1,145 @@
+<script>
+  (function ($) {
+    "use strict";
+
+    var fullHeight = function () {
+      $(".js-fullheight").css("height", $(window).height());
+      $(window).resize(function () {
+        $(".js-fullheight").css("height", $(window).height());
+      });
+    };
+    fullHeight();
+
+    $(".toggle-password").click(function () {
+      $(this).toggleClass("fa-eye fa-eye-slash");
+      var input = $($(this).attr("toggle"));
+      if (input.attr("type") == "password") {
+        input.attr("type", "text");
+      } else {
+        input.attr("type", "password");
+      }
+    });
+  })(jQuery);
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-analytics.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signInWithCustomToken,
+    setPersistence,
+    browserSessionPersistence,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVBBsrVw7LfqpCj4NP2KlGRXqSQFmsOsU",
+    authDomain: "qualifica-web-383414.firebaseapp.com",
+    projectId: "qualifica-web-383414",
+    storageBucket: "qualifica-web-383414.appspot.com",
+    messagingSenderId: "339146918569",
+    appId: "1:339146918569:web:d09898d85dbe71f15477b8",
+    measurementId: "G-KXFK8ZW3CW",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+
+  const loginForm = document.getElementById("login-form");
+  const errorMessage = document.getElementById("error-message");
+
+  const googleSigninBtn = document.getElementById("google-signin-btn");
+  googleSigninBtn.addEventListener("click", () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth,provider)
+      .then((result) => {
+        const user = result.user;
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
+      });
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      user
+        .getIdToken()
+        .then((idToken) => {
+          localStorage.setItem("token", idToken);
+          google.script.run
+            .withSuccessHandler((page) => {
+              document.open();
+              document.write(page);
+              document.close();
+            })
+            .includeByRoute("inicio");
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else {
+      $("#page").removeClass("d-none");
+      $("#splash").addClass("d-none");
+    }
+  });
+
+  setPersistence(auth, browserSessionPersistence)
+    .then(() => {
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = loginForm.email.value;
+        const password = loginForm.password.value;
+        return signInWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            var user = userCredential.user;
+            user
+              .getIdToken()
+              .then((idToken) => {
+                localStorage.setItem("token", idToken);
+                google.script.run.setLoginToken(idToken);
+                google.script.run
+                  .withSuccessHandler((page) => {
+                    document.open();
+                    document.write(page);
+                    document.close();
+                  })
+                  .includeByRoute("inicio");
+              })
+              .catch((error) => {
+                console.error(error);
+              });
+          })
+          .catch((error) => {
+            $.toast({
+              text: "Usuário ou senha inválidos. Tente novamente", // Text that is to be shown in the toast
+              heading: "Algo está errado", // Optional heading to be shown on the toast
+              icon: "error", // Type of toast icon
+              showHideTransition: "fade", // fade, slide or plain
+              allowToastClose: true, // Boolean value true or false
+              hideAfter: 3000, // false to make it sticky or number representing the miliseconds as time after which toast needs to be hidden
+              stack: 5, // false if there should be only one toast at a time or a number representing the maximum number of toasts to be shown at a time
+              position: "top-right", // bottom-left or bottom-right or bottom-center or top-left or top-right or top-center or mid-center or an object representing the left, right, top, bottom values
+
+              textAlign: "left", // Text alignment i.e. left, right or center
+              loader: true, // Whether to show loader or not. True by default
+              loaderBg: "#9EC600", // Background color of the toast loader
+
+            });
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.log(errorCode, errorMessage);
+            errorMessage.innerText = errorMessage;
+          });
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+</script>

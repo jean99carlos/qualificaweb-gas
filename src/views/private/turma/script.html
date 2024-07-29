@@ -1,0 +1,168 @@
+<script
+  src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"
+  type="text/javascript"
+></script>
+<script>
+  async function getFrequencia(ano, polo, programa, curso, turma, disciplina) {
+    UTILITARIA.handle(async () => {
+      const heading = $("#heading");
+      const table = $("#tabela");
+      const tbody = $("<tbody>");
+      const headerRow = $("<tr>").append(
+        $("<th>")
+          .text("Nome")
+          .attr("scope", "col")
+          .attr("rowspan", "2")
+          .css("text-align", "center")
+      );
+      const headerRow2 = $("<tr>");
+      let cont = 0;
+      jsonData = JSON.parse(
+        await baseService.getFrequencia([
+          ano,
+          polo,
+          programa,
+          curso,
+          turma,
+          disciplina,
+        ])
+      );
+      for (const prop in jsonData[0]) {
+        const toggleDiv = $("<div>").addClass("tw-toggle");
+        const labels = ["F", "", "P"];
+        labels.forEach((label) => {
+          const isChecked = "" === label;
+          const input = $("<input>")
+            .attr({
+              type: "radio",
+              name: `${prop}`,
+              value: label,
+              checked: isChecked,
+              id: `${prop}`,
+            })
+            .on("change", (event) => {
+              const id = event.target.id;
+              const val = event.target.value;
+              document
+                .querySelectorAll(`[name^='${id}'][value='${val}']`)
+                .forEach((input) => {
+                  input.checked = true;
+                });
+            });
+          const iconClass =
+            label === "P"
+              ? "fa-check"
+              : label === "F"
+              ? "fa-times"
+              : "fa-2xs fa-circle";
+          const toggleLabel = $("<label>")
+            .addClass("toggle toggle-yes")
+            .append($("<i>").addClass(`fa ${iconClass}`));
+          toggleDiv.append(input, toggleLabel, $("<span>"));
+        });
+        if (prop !== "nome") {
+          headerRow.append($("<th>").text(prop).attr("scope", "col"));
+          headerRow2.append($("<th>").attr("scope", "col").append(toggleDiv));
+        }
+      }
+      table.append($("<thead>").append(headerRow).append(headerRow2));
+
+      // Build table body
+      jsonData.forEach((data) => {
+        const dataRow = $("<tr>").append($("<td>").text(data.nome));
+
+        for (const prop in data) {
+          if (prop !== "nome") {
+            cont++;
+            const toggleDiv = $("<div>").addClass("tw-toggle");
+            const labels = ["F", "", "P"];
+
+            labels.forEach((label) => {
+              const isChecked = data[prop] === label;
+              const input = $("<input>").attr({
+                type: "radio",
+                name: `${prop}${cont}`,
+                value: label,
+                checked: isChecked,
+              });
+              const iconClass =
+                label === "P"
+                  ? "fa-check"
+                  : label === "F"
+                  ? "fa-times"
+                  : "fa-2xs fa-circle";
+              const toggleLabel = $("<label>")
+                .addClass("toggle toggle-yes")
+                .append($("<i>").addClass(`fa ${iconClass}`));
+              toggleDiv.append(input, toggleLabel, $("<span>"));
+            });
+
+            dataRow.append($("<td>").append(toggleDiv));
+          }
+        }
+
+        tbody.append(dataRow);
+      });
+      table.append(tbody);
+
+      /*
+          dataTable = new simpleDatatables.DataTable("#tabela", {
+            searchable: false,
+            fixedHeight: true,
+          });*/
+    });
+  }
+  async function salvarFrequencia() {
+    $.LoadingOverlay("show");
+    var json = [];
+    $("#tabela tbody tr").each(function (i, row) {
+      var rowData = {};
+      $(row)
+        .find("td:not(:first)")
+        .each(function (j, cell) {
+          var date = $("#tabela thead tr th")
+            .eq(j + 1)
+            .text();
+          var value = $(cell).find("input:checked").val();
+          rowData[date] = value;
+        });
+      json.push({ Nome: $(row).find("td:first").text(), Data: rowData });
+    });
+
+    google.script.run
+      .withFailureHandler((ex) => {
+        $.LoadingOverlay("hide");
+        UTILITARIA.toast(
+          "Erro",
+          "Ocorreu um problema ao carregar os dados.",
+          UTILITARIA.icon.error
+        );
+        console.error(ex.message);
+      })
+      .withSuccessHandler(() => {
+        $.LoadingOverlay("hide");
+        UTILITARIA.toast(
+          "Sucesso",
+          "Dados salvos com sucesso.",
+          UTILITARIA.icon.success
+        );
+      })
+      .setFrequencia(
+        $("#selectAno").val(),
+        $("#selectPolo").val(),
+        $("#selectPrograma").val(),
+        $("#selectCurso").val(),
+        $("#selectTurma").val(),
+        $("#selectDisciplina").val(),
+        JSON.stringify(json)
+      );
+  }
+  getFrequencia(
+    $("#selectAno").val(),
+    $("#selectPolo").val(),
+    $("#selectPrograma").val(),
+    $("#selectCurso").val(),
+    $("#selectTurma").val(),
+    $("#selectDisciplina").val()
+  );
+</script>

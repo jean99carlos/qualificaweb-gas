@@ -1,0 +1,26 @@
+<?!= include('src/views/private/turma/css') ?>
+<div class="container">
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Turma</h1>
+    <div>
+      <a
+        href="#"
+        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+        ><i class="fas fa-download fa-sm text-white-50"></i> Imprimir</a
+      >
+      <a
+        href="#"
+        class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+        onclick="salvarFrequencia()"
+        ><i class="fas fa-save fa-sm text-white-50"></i> Salvar</a
+      >
+    </div>
+  </div>
+  <div class="card mt-3">
+    <div class="card-body mt-3">
+      <table class="table" id="tabela"></table>
+    </div>
+  </div>
+</div>
+<?!= include('src/views/private/turma/script') ?>

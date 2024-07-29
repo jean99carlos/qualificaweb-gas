@@ -1,0 +1,33 @@
+<script>
+    class BaseService{
+        constructor(api){
+            this.api=api
+        }
+        async getAnos(){
+            return this.api.run('getAnos')
+        }
+        async getPolos(params){
+            return this.api.run('getPolos',params)
+        }
+        async getProgramas(params){
+            return this.api.run('getProgramas',params)
+        }
+        async getCursos(params){
+            return this.api.run('getCursos',params)
+        }
+        async getTurmas(params){
+            return this.api.run('getTurmas',params)
+        }
+        async getDisciplinas(params){
+            return this.api.run('getDisciplinas',params)
+        }
+        async getFrequencia(params){
+            console.log(params)
+            return this.api.run('getFrequencia',params);
+        }
+        async includeByRoute(name){
+            return this.api.run('includeByRoute',[name])
+        }
+        
+    }
+</script>

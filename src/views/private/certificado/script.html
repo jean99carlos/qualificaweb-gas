@@ -1,0 +1,137 @@
+
+
+<script>
+    function getAllAnos() {
+      google.script.run
+      .withSuccessHandler((lista) => {
+        const select = $("#selectAno");
+        select.empty(); 
+        select.append($("<option>").text('Selecione').val(''));
+        lista.forEach((opt) => {
+          const el = $("<option>").text(opt).val(opt);
+          select.append(el);
+        });
+        select.change(() => {
+          $.LoadingOverlay("show")
+          const selectedAno = select.val()
+          getAllProgramas(selectedAno)
+        });
+        $.LoadingOverlay("hide")
+      })
+      .withFailureHandler((ex)=>{
+        console.log(ex)
+      })
+      .getAnos();
+    }
+  
+    function getAllProgramas(selectedAno) {
+      google.script.run.withSuccessHandler((lista) => {
+        const select = $("#selectPrograma");
+        select.empty(); // clear existing options
+        select.append($("<option>").text('Selecione').val(''));
+        lista.forEach((opt) => {
+          const el = $("<option>").text(opt).val(opt);
+          select.append(el);
+        });
+        select.change(() => {
+          $.LoadingOverlay("show");
+          const selectedPrograma = select.val();
+          getAllTurmas(selectedAno, selectedPrograma);
+        });
+        $.LoadingOverlay("hide");
+      }).getProgramas(selectedAno);
+    }
+  
+    function getAllTurmas(selectedAno, selectedPrograma) {
+      google.script.run.withSuccessHandler((lista) => {
+        const select = $("#selectTurma");
+        select.empty(); 
+        select.append($("<option>").text('Selecione').val(''));
+        lista.forEach((opt) => {
+          const el = $("<option>").text(opt).val(opt);
+          select.append(el);
+        });
+        select.change(() => {
+          $.LoadingOverlay("show");
+          const selectedTurma = select.val();
+          getFrequencia(selectedAno, selectedPrograma,selectedTurma);
+        });
+        $.LoadingOverlay("hide");
+      }).getTurmas(selectedAno, selectedPrograma);
+    }
+  
+    function getFrequencia(ano,programa,turma){
+      google.script.run.withSuccessHandler((jsonData)=>{
+        jsonData=JSON.parse(jsonData);
+        const table = $('#tabela');
+  
+        const headerRow = $('<tr>');
+        headerRow.append($('<th>').text('Nome').attr('scope', 'col'));
+        
+        for (const prop in jsonData[0]) { 
+          if (prop !== 'nome') { 
+            headerRow.append($('<th>').text(prop).attr('scope', 'col'));
+          }
+        }
+        table.append($('<thead>').append(headerRow));
+        
+        const tbody = $('<tbody>');
+        let cont=0;
+        jsonData.forEach((data)=>{
+          const dataRow = $('<tr>', { 
+            html: $('<td>').text(data.nome)
+          });
+          for (const prop in data) {
+            if (prop !== 'nome') {
+              cont++;
+              const toggleDiv = $('<div>').addClass('tw-toggle');
+              const labels = ['F', '', 'P'];
+              labels.forEach(label => {
+              const input = $('<input>').attr({
+                type: 'radio',
+                name: prop+cont,
+                value: label
+              }).prop('checked', data[prop] == label);
+              const iconClass = label=='P'?'fa-check':(label=='F'?'fa-times':'fa-2xs fa-circle');
+              const toggleLabel = $('<label>').addClass('toggle toggle-yes')
+                .append($('<i>').addClass(`fa ${iconClass}`));
+              toggleDiv.append(input, toggleLabel,$('<span>'));
+            });
+            dataRow.append($('<td>').append(toggleDiv));
+          }
+        }
+        tbody.append(dataRow);
+        });
+        table.append(tbody);
+        $.LoadingOverlay("hide");
+      }).getFrequencia(ano,programa,turma);
+    }
+    function salvarFrequencia(){
+      $.LoadingOverlay("show");
+      var json = [];
+      $('#tabela tbody tr').each(function(i, row) {
+        var rowData = {};
+        $(row).find('td:not(:first)').each(function(j, cell) {
+          var date = $('#tabela thead tr th').eq(j+1).text();
+          var value = $(cell).find('input:checked').val();
+          rowData[date] = value;
+        });
+        json.push({ "Nome": $(row).find('td:first').text(), "Data": rowData });
+      });
+  
+      google.script.run
+        .withFailureHandler(()=>{
+          alert('Ocorreu um problema ao salvar!')
+          $.LoadingOverlay("hide");
+        })
+        .withSuccessHandler(()=>{
+          alert('Dados salvos com sucesso!')
+          $.LoadingOverlay("hide");
+        })
+        .setFrequencia( $("#selectAno").val(), $("#selectPrograma").val(), $("#selectTurma").val(),JSON.stringify(json));
+    }
+    $(document).ready(() => {
+      $.LoadingOverlay("show");
+      //getAllAnos();
+    });
+  </script>

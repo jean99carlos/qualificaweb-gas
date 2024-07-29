@@ -1,0 +1,80 @@
+<style>
+    :root {
+      --tw-font-size: 1rem;
+      --tw-toggle-size: 2rem;
+      --tw-border-width: 0.1rem;
+      --tw-toggle-margin: calc(var(--tw-toggle-size) / 6);
+    }
+  
+    .tw-toggle {
+      display: inline-block;
+      /*padding: calc(var(--tw-toggle-size) / 12) calc(var(--tw-toggle-size) / 8);*/
+      border-radius: 20px;
+      position: relative;
+      border: calc(var(--tw-border-width)) solid #95A5A6;
+    }
+  
+    .tw-toggle label {
+      text-align: center;
+      font-family: sans-serif;
+      display: inline-block;
+      color: #95A5A6;
+      position: relative;
+      z-index: 2;
+      margin: 0;
+      text-align: center;
+      padding: calc(var(--tw-font-size) / 7) calc(var(--tw-font-size) / 3.5);
+      font-size: var(--tw-font-size);
+    }
+  
+    .tw-toggle input {
+      position: absolute;
+      z-index: 3;
+      opacity: 0;
+      cursor: pointer;
+      width: calc(var(--tw-toggle-size) * 0.7);
+      height: calc(var(--tw-toggle-size) * 0.7);
+    }
+  
+    .tw-toggle span {
+      height: calc(var(--tw-toggle-size) /1.7);
+      width: calc(var(--tw-toggle-size) / 1.7);
+      line-height: calc(var(--tw-toggle-size) / 1.05);
+      border-radius: 50%;
+      background: #fff;
+      display: block;
+      position: absolute;
+      left: calc(var(--tw-toggle-margin) * 7);
+      top: calc(var(--tw-toggle-margin) / 1.5);
+      transition: all 0.3s ease-in-out;
+    }
+  
+    .tw-toggle input[value="F"]:checked~span {
+      background: #e74c3c;
+      left: calc(var(--tw-toggle-margin) / 2);
+      color: #fff;
+    }
+  
+    .tw-toggle input[value="P"]:checked~span {
+      background: #27ae60;
+      left: calc(var(--tw-toggle-margin) * 7.5);
+    }
+  
+    .tw-toggle input[value=""]:checked~span {
+      background: #95A5A6;
+      left: calc(var(--tw-toggle-margin) * 3.6);
+    }
+  
+    .tw-toggle input[value="F"]:checked+label,
+    .tw-toggle input[value="P"]:checked+label {
+      color: #fff;
+    }
+  
+    .tw-toggle input[value=""]:checked+label {
+      color: #fff;
+    }
+  
+    .fa-circle {
+      opacity: 0;
+    }
+  </style>

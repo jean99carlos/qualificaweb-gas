@@ -1,0 +1,465 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-loading-overlay@2.1.7/dist/loadingoverlay.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+  crossorigin="anonymous"
+></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.easing@1.4/jquery.easing.min.js"></script>
+<script>
+  var UTILITARIA = {};
+  (function () {
+    this.icon = {
+      info: "info",
+      warning: "warning",
+      error: "error",
+      success: "success",
+    };
+
+    this.toast = (title, text, icon) => {
+      $.toast({
+        text: text,
+        heading: title,
+        icon: icon,
+        showHideTransition: "fade",
+        allowToastClose: true,
+        hideAfter: 3000,
+        stack: 100,
+        position: "top-right",
+        textAlign: "left",
+        loader: true,
+        loaderBg: "#FFFFFF",
+        /*beforeShow: function () {}, // will be triggered before the toast is shown
+          afterShown: function () {}, // will be triggered after the toat has been shown
+          beforeHide: function () {}, // will be triggered before the toast gets hidden
+          afterHidden: function () {}  // will be triggered after the toast has been hidden */
+      });
+    };
+
+    var telaAtual = null;
+    this.atualizaTela = async () => {
+      if (telaAtual != null) this.loadScreen(telaAtual);
+    };
+    this.loadScreen = async (name) => {
+      $.LoadingOverlay("show");
+      try {
+        const setInnerHTML = (elm, html) => {
+          elm.innerHTML = html;
+          Array.from(elm.querySelectorAll("script")).forEach((oldScriptEl) => {
+            const newScriptEl = document.createElement("script");
+            Array.from(oldScriptEl.attributes).forEach((attr) => {
+              newScriptEl.setAttribute(attr.name, attr.value);
+            });
+            const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+            newScriptEl.appendChild(scriptText);
+            oldScriptEl.parentNode.replaceChild(newScriptEl, oldScriptEl);
+          });
+        };
+        if (name == "inicio") {
+          telaAtual = "inicio";
+          setInnerHTML(document.getElementById("page"), "");
+        } else {
+          const page = await baseService.includeByRoute(name);
+          setInnerHTML(document.getElementById("page"), page);
+          telaAtual = name;
+        }
+      } catch (ex) {
+        console.error(ex);
+        this.toast(
+          "Erro",
+          "Ocorreu um problema ao abrir a tela.",
+          this.icon.error
+        );
+        document.getElementById("page").innerHTML = "";
+        telaAtual = null;
+      } finally {
+        $.LoadingOverlay("hide");
+      }
+    };
+
+    this.handle = async (code) => {
+      $.LoadingOverlay("show");
+      try {
+        await code();
+      } catch (ex) {
+        this.toast("Erro", ex.message, this.icon.error);
+        console.error(ex);
+      } finally {
+        $.LoadingOverlay("hide");
+      }
+    };
+
+    this.populateSelect = async (select, options, key, onChange) => {
+      const addOptionsToSelect = (select, options) => {
+        select.empty();
+        select.append(
+          $("<option>")
+            .text(select.attr("id").replace("select", ""))
+            .prop("readonly", true)
+            .prop("hidden", true)
+            .prop("selected", true)
+            .val("")
+        );
+        options.forEach((opt) => {
+          const el = $("<option>").text(opt).val(opt);
+          select.append(el);
+        });
+      };
+
+      select.empty();
+      select.append(
+        $("<option>")
+          .text(select.attr("id").replace("select", ""))
+          .prop("readonly", true)
+          .prop("hidden", true)
+          .prop("selected", true)
+          .val("")
+      );
+      options.forEach((opt) => {
+        const el = $("<option>").text(opt).val(opt);
+        select.append(el);
+      });
+
+      const cached = localStorage.getItem(key);
+      const selectedOption =
+        cached != null ? cached : options.length == 1 ? options[0] : null;
+
+      if (selectedOption !== null) {
+        localStorage.setItem(key, selectedOption);
+        select.val(selectedOption);
+        await onChange();
+      }
+
+      select.change(async () => {
+        localStorage.setItem(key, select.val());
+        UTILITARIA.atualizaTela();
+        await onChange();
+      });
+    };
+  }).apply(UTILITARIA);
+</script>
+<script>
+  async function montaMenu(menuItems) {
+    const sidebar = document.querySelector("#accordionSidebar");
+    for (let item of menuItems) {
+      const li = document.createElement("li");
+      li.classList.add("nav-item");
+
+      if (item.active) {
+        li.classList.add("active");
+      }
+
+      const link = document.createElement("a");
+      link.classList.add("nav-link");
+
+      if (item.submenu && item.submenu.length > 0) {
+        link.classList.add("collapsed");
+        link.setAttribute("data-toggle", "collapse");
+        link.setAttribute("data-target", `#collapse${item.title}`);
+        link.setAttribute("aria-expanded", "true");
+        link.setAttribute("aria-controls", `collapse${item.title}`);
+      } else {
+        link.setAttribute("href", "javascript:void(0);");
+        link.addEventListener("click", function () {
+          UTILITARIA.loadScreen(item.link);
+        });
+      }
+
+      const icon = document.createElement("i");
+      icon.classList.add(...item.iconClass.split(" "));
+      link.appendChild(icon);
+      const title = document.createElement("span");
+      title.innerText = item.title;
+      link.appendChild(title);
+      li.appendChild(link);
+      if (item.submenu && item.submenu.length > 0) {
+        const submenuDiv = document.createElement("div");
+        submenuDiv.classList.add("collapse");
+        submenuDiv.setAttribute("id", `collapse${item.title}`);
+        const submenuItemsDiv = document.createElement("div");
+        submenuItemsDiv.classList.add(
+          "bg-white",
+          "py-2",
+          "collapse-inner",
+          "rounded"
+        );
+        for (let submenuItem of item.submenu) {
+          const submenuLink = document.createElement("a");
+          submenuLink.classList.add("collapse-item");
+          submenuLink.setAttribute("href", "javascript:void(0);");
+          submenuLink.addEventListener("click", function () {
+            UTILITARIA.loadScreen(submenuItem.link);
+          });
+          submenuLink.innerText = submenuItem.title;
+          submenuItemsDiv.appendChild(submenuLink);
+        }
+        submenuDiv.appendChild(submenuItemsDiv);
+        li.appendChild(submenuDiv);
+      }
+      sidebar.appendChild(li);
+    }
+    const sidebarToggle = document.createElement("button");
+    sidebarToggle.classList.add("rounded-circle", "border-0");
+    sidebarToggle.setAttribute("id", "sidebarToggle");
+    sidebarToggle.addEventListener("click", function () {
+      sidebar.classList.toggle("toggled");
+    });
+    const sidebarToggleDiv = document.createElement("div");
+    sidebarToggleDiv.classList.add("text-center", "d-none", "d-md-inline");
+    sidebarToggleDiv.appendChild(sidebarToggle);
+    sidebar.appendChild(sidebarToggleDiv);
+  }
+  const selectAno = $("#selectAno");
+  const selectPolo = $("#selectPolo");
+  const selectPrograma = $("#selectPrograma");
+  const selectCurso = $("#selectCurso");
+  const selectTurma = $("#selectTurma");
+  const selectDisciplina = $("#selectDisciplina");
+
+  async function buscaAnos() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getAnos();
+      UTILITARIA.populateSelect(selectAno, data, "selectedAno", async () => {
+        await buscaPolos(selectAno.val());
+      });
+    });
+  }
+
+  async function buscaPolos() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getPolos([selectAno.val()]);
+      UTILITARIA.populateSelect(selectPolo, data, "selectedPolo", async () => {
+        await buscaProgramas(selectAno.val(), selectPolo.val());
+      });
+    });
+  }
+
+  async function buscaProgramas() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getProgramas([
+        selectAno.val(),
+        selectPolo.val(),
+      ]);
+      UTILITARIA.populateSelect(
+        selectPrograma,
+        data,
+        "selectedPrograma",
+        async () => {
+          await buscaCursos(
+            selectAno.val(),
+            selectPolo.val(),
+            selectPrograma.val()
+          );
+        }
+      );
+    });
+  }
+
+  async function buscaCursos() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getCursos([
+        selectAno.val(),
+        selectPolo.val(),
+        selectPrograma.val(),
+      ]);
+      UTILITARIA.populateSelect(
+        selectCurso,
+        data,
+        "selectedCurso",
+        async () => {
+          await buscaTurmas(
+            selectAno.val(),
+            selectPolo.val(),
+            selectPrograma.val(),
+            selectCurso.val()
+          );
+        }
+      );
+    });
+  }
+
+  async function buscaTurmas() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getTurmas([
+        selectAno.val(),
+        selectPolo.val(),
+        selectPrograma.val(),
+        selectCurso.val(),
+      ]);
+      UTILITARIA.populateSelect(
+        selectTurma,
+        data,
+        "selectedTurma",
+        async () => {
+          await buscaDisciplinas(
+            selectAno.val(),
+            selectPolo.val(),
+            selectPrograma.val(),
+            selectCurso.val(),
+            selectTurma.val()
+          );
+        }
+      );
+    });
+  }
+
+  async function buscaDisciplinas() {
+    UTILITARIA.handle(async () => {
+      const data = await baseService.getDisciplinas([
+        selectAno.val(),
+        selectPolo.val(),
+        selectPrograma.val(),
+        selectCurso.val(),
+        selectTurma.val(),
+      ]);
+      UTILITARIA.populateSelect(
+        selectDisciplina,
+        data,
+        "selectedDisciplina",
+        async () => {}
+      );
+    });
+  }
+</script>
+<script>
+  $(document).ready(async () => {
+    try {
+      const menuItens =  JSON.parse('<?!= JSON.stringify(getMenu()) ?>');
+      console.log(menuItens);
+      montaMenu(menuItens);
+    } catch (error) {
+      console.error(error);
+    }
+    try {
+      /*<? var data = getData() ?>*/
+      $("#profile-picture").attr("src", "<?!= data.user.foto ?>");
+      $("#profile-name").text("<?!= data.user.nome ?>");
+      $("#profile-role").text("Administrador");
+      /*
+      var dropdowns = "";
+      dropdowns = "<?!= JSON.stringify(data.dropdowns) ?>";
+      const x = 0;
+      dropdowns = JSON.parse(dropdowns);
+      const jsonData = dropdowns;
+
+      function converter(data, output, level) {
+        if (typeof data === "object" && data !== null) {
+          if (!output[level]) {
+            output[level] = new Set();
+          }
+          output[level].add(data.name);
+          if (Array.isArray(data.subfolders)) {
+            for (const subfolder of data.subfolders) {
+              converter(subfolder, output, level + 1);
+            }
+          }
+        }
+      }
+
+      const output = [];
+      converter(jsonData[0], output, 0);
+      dropdowns = output;
+      */
+    } catch (error) {
+      console.error(error);
+    }
+    await buscaAnos();
+  });
+  function loadCertificado() {
+    google.script.run
+      .withSuccessHandler(function (page) {
+        var newWindow = window.open("", "_blank");
+        var htmlString = page;
+        newWindow.document.write(htmlString);
+        newWindow.document.title = "Certificado";
+      })
+      .getCertificado();
+  }
+</script>
+<!-- Logout -->
+<script type="module">
+  import {
+    getAuth,
+    signOut,
+  } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+  function logout() {
+    localStorage.removeItem("token");
+    signOut(getAuth())
+      .then(() => {
+        google.script.run.setLoginToken(null);
+        google.script.run
+          .withSuccessHandler((page) => {
+            document.open();
+            document.write(page);
+            document.close();
+          })
+          .includeByRoute("login");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+  const logoutButton = document.getElementById("logout-button");
+  logoutButton.addEventListener("click", logout);
+</script>
+<script type="module">
+  (function ($) {
+    "use strict"; // Start of use strict
+
+    // Toggle the side navigation
+    $("#sidebarToggle, #sidebarToggleTop").on("click", function (e) {
+      $("body").toggleClass("sidebar-toggled");
+      $(".sidebar").toggleClass("toggled");
+      if ($(".sidebar").hasClass("toggled")) {
+        $(".sidebar .collapse").collapse("hide");
+      }
+    });
+
+    // Close any open menu accordions when window is resized below 768px
+    $(window).resize(function () {
+      if ($(window).width() < 768) {
+        $(".sidebar .collapse").collapse("hide");
+      }
+    });
+
+    // Prevent the content wrapper from scrolling when the fixed side navigation hovered over
+    $("body.fixed-nav .sidebar").on(
+      "mousewheel DOMMouseScroll wheel",
+      function (e) {
+        if ($(window).width() > 768) {
+          var e0 = e.originalEvent,
+            delta = e0.wheelDelta || -e0.detail;
+          this.scrollTop += (delta < 0 ? 1 : -1) * 30;
+          e.preventDefault();
+        }
+      }
+    );
+
+    // Scroll to top button appear
+    $(document).on("scroll", function () {
+      var scrollDistance = $(this).scrollTop();
+      if (scrollDistance > 100) {
+        $(".scroll-to-top").fadeIn();
+      } else {
+        $(".scroll-to-top").fadeOut();
+      }
+    });
+
+    // Smooth scrolling using jQuery easing
+    $(document).on("click", "a.scroll-to-top", function (e) {
+      var $anchor = $(this);
+      $("html, body")
+        .stop()
+        .animate(
+          {
+            scrollTop: $($anchor.attr("href")).offset().top,
+          },
+          1000,
+          "easeInOutExpo"
+        );
+      e.preventDefault();
+    });
+  })(jQuery); // End of use strict
+</script>
+<?!= include('src/views/private/js/bootstrap.html') ?>

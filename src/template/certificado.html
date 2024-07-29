@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <style>
+    #contents-table {
+      border-collapse: collapse;
+      width: 80%;
+      font-size: 12px;
+
+    }
+
+    #contents-table th,
+    #contents-table td {
+      border: 2px solid black;
+      padding: 8px;
+      text-align: center;
+      line-height: 2;
+
+    }
+
+    #contents-table th:first-child,
+    #contents-table td:first-child,
+    #contents-table th:last-child,
+    #contents-table td:last-child {
+      text-align: center;
+    }
+
+    .text {
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    .certificado-text {
+      font-size: 15px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    :root {
+      font-family: helvetica;
+      --page-width: 26cm;
+      --page-height: 17cm;
+    }
+
+    #frente {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      width: var(--page-width);
+      height: var(--page-height);
+      padding: 60px;
+    }
+
+    #verso {
+      display: flex;
+      flex-direction: column;
+      width: var(--page-width);
+      height: var(--page-height);
+      padding: 60px;
+    }
+
+    #bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4.2.8/dist/es6-promise.auto.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+  <div id="certificado">
+
+    <div id="frente">
+      <img id="bg"></img>
+      <div style="display:flex;justify-content: space-around;height: 130px;align-items: center;">
+        <img id="programa" style=" width: auto;height: 70px;margin-right: auto;"></img>
+        <img id="governo" style=" width: auto;height: 140px;padding-right: 70px;"></img>
+        <img id="ufv" style=" width: auto;height: 100px;    margin-left: auto;padding-right: 70px;"></img>
+      </div>
+      <h1 style="text-align: center;margin-top: 0px;font-size: 50px;">CERTIFICADO</h1>
+      <p class="text" style="adding-top: 40px;margin-left: 20px;margin-right: 20px;">
+        <span class="certificado-text">
+          A Central de Ensino e Desenvolvimento Agrário de Florestal (CEDAF) / Universidade Federal de Viçosa certifica que <strong><?=data.nome?></strong>, CPF nº <?=data.cpf?>, concluiu o <strong>Curso de <?= data.curso ?></strong> com carga-horária de <strong><?=data.cargaHoraria?> horas</strong>, no período de <?=data.inicio?> a <?=data.fim?>, no âmbito do <strong>Programa <?=data.programa?></strong>.
+        </span>
+      </p>
+      <p style="text-align: center">
+        <span class="certificado-text">Florestal, <?= Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'dd/MM/yyyy') ?></span>
+      </p>
+      <p><br></p>
+      <div style="display:flex;justify-content: space-around;height: 130px;text-align:center;align-items: center;">
+        <div style="text-align: center;">
+          <img id="assCoordenadorGeral" height="60px" width="120px"></img>
+          <br/>
+          ______________________________<br/>
+          ADILSON DE CASTRO ANTÔNIO<br/>
+          Coordenador-Geral do Bolsa Formação<br/>
+          CEDAF - UFV Campus Florestal<br/>
+          Portaria 0258/2022 RTR/UFV
+        </div>
+        <div style="text-align: center;">
+          <img id="assDiretor" height="60px" width="120px"></img>
+          <br/>
+          ______________________________<br/>
+          ANTÔNIO CEZAR PEREIRA CALIL<br/>
+          Diretor-geral<br/>
+          UFV-Florestal / CEDAF
+        </div>
+      </div>
+      <p style="margin-top: 0px;margin-bottom: 0px;"><br></p>
+      <p style="text-align: center;line-height: 1.6;font-size: 11px;">
+        Código de autenticidade: <b><?=data.codigo?></b>
+        <br> Validação:<b><?=data.link?></b>
+      </p>
+    </div>
+    <div class="page-break"></div>
+
+
+    <div id="verso">
+      <table id="contents-table" style="border:1px solid black">
+        <thead>
+          <tr>
+            <th style="width:20%;font-size: 15px;">MÓDULO</th>
+            <th style="font-size:15px">COMPONENTES CURRICULARES</th>
+            <th style="width:20%;font-size:15px">C.H.</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <script>
+    //Monta o verso
+    var contents = JSON.parse( <?=data.conteudos?> );
+  $.each(contents.modules, function(i, module) {
+    var $row = $('<tr>');
+    $row.append($('<td>').text(module.title));
+    $row.append($('<td>').html(module.contents.join('<br>')));
+    $row.append($('<td>').text(module.total_hours));
+    $('#contents-table tbody').append($row);
+  });
+  var $totalRow = $('<tr>')
+    .addClass('total-row');
+  $totalRow.append($('<td>')
+    .text(contents.total_hours.title)
+    .css('font-weight', 'bold')
+    .attr('colspan', '2'));
+  $totalRow.append($('<td>')
+    .text(contents.total_hours.value)
+    .css('font-weight', 'bold'));
+  $('#contents-table tbody').append($totalRow);
+
+
+    //imagens
+    let programa =<?=data.logoPrograma?> 
+    let ufv =<?=data.logoUfv?> 
+    let governo =<?=data.logoGoverno?> 
+    let bg = 'https://lh3.googleusercontent.com/fife/APg5EOb4GjVJWFhoMPZXotJbsjEVEMseHsGBAIe_gnv3rxB-1BEUkX0SHp2YLRBj8X_iDqBfLT2lf1RkXKfrMcTZOXA0m1AMsapaWixOGJ_30lBdqFBIBvFFC6o72geO3XTJTbGvTxq5gbs_OHxnRyekG6LahTzj5W4bWyee1N7980pbC6YH26By0g8jhaixsN9NNmieqHXxJyHfm74q5tcyqjQaZdmkjgiSggqpG0QJ9wvjb5TVhEyvhCeuwyLU-pdYS4PeHjQOZyNTpKFaSeK8xMEbIG_uQ4sFhOxBnqGsEyR0pK9-NGDUC2pWDC673o9IEEAT_JzSrEjZGpTpaIdbykRgJnrUhlikkMzVkvEjNyjt6rCEoZQGtl2QTdmpmmVy7aomXmq-9kOdFbx67iMfwAcCuzPI8aM5MxT8A1z6bcc9Tof8MQ9DzyuLrjDG--H7-G8ujqFlWBho5O-s0-VWfmvaykwaZ5csOvCb-G637loj-cgmp-Cir1k9qW1CtJneKtLVLrn5FXtiaIbL7yU_BK4EuV9yZT7ldWouISHBwtyjnU1vncLABLqHQsNF_qmxVp8Ygx3XloKXy4-S5mTkD9A8dt08zea-sQp_6GuckT0hyEeobQ8qQS4JFbbO7TDymBlhm1FJOT8jos2jvxw8-QzBD7pKH3DMd1Y1sJ0ZWmXWvuThW7AK01RLPb6ihyMqNlLKwtzDAVPHSyqZNcyjJtcrHSQrdtQaghka8W1A30yoj-1V-ZzZHUdRc3x7LXsbY3US0ai1hn0NCwa0AGgSKi-azsKezzXcdII03esHSeM0FqOav_Czlvdw2YcK_L9oyh9-1lCFaT00LUuO5UZ-mHt6gIIVzmeC_SmXMHSjZQdQE3O6CqsB09momrOhyHD4Rh9ll6KeeHtH2lEsN8Z-3xN3Jptg3hYbLjj7cHBakA278B42KSWYl3twVuM5eSkB-pWjkMoYZe6ZK82qJ9o7CHlKyoKpCAP5csbMdnrgQgacuo7eOOKhLdWEIqXVRXyLJIMcYdgrRS9QYhj624fWxYYo5I3AcEFohZ3BD2eyrA-GuSyzuZ9JTDWHGli0Fsklox3ofexj-P-KbIU7CfUDkwnIJ7QWiwciyiEcq8pNElkKJhWPZCkAeJDyH-TqhTR906geHVHmHk0CWHd4fRo2IKFIQ6HP0guCfmSBaHDW5cYcrpv4BvYD0DvNOFOiNveRdVLG6zta-KRRkMcbSwvmCaSIkDr7I38mu2kR2gDvPepUVDI7wdWk9kv7tmo4GqpMeVPfzG6J874rfg8aE1W3mantMwrCX9JYZyvsdaFkJrL3vceIwhlYBsqPfrXlJZ4GddiDrvMePRTLrgXPXja1vb4Px6P7YKp5KXzw2FVyJiph4iu3koPkfW7lu9p8copo_v9iF2oQ3QYjOxV7N1caYk8T2XOax6qFbVPEwpRPDGxfJ9gqxbrTuzU4v3udArb-q_GThLtbestvKdwHGKPFk_ArS4K2=w1297-h932'
+
+    const element = document.getElementById("certificado");
+    const options = {
+      margin: [0, 0, 0, 0],
+      filename: 'Certificado '+<?=data.nome?>+'.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 5 }, 
+      jsPDF: { unit: 'cm', format: 'A4', orientation: 'landscape' } 
+    };
+
+    function loadAsBase64(links, components) {
+       const promises = links.map((link, index) => {
+          return new Promise((resolve, reject) => {
+            const imgElement = document.createElement('img');
+            imgElement.crossOrigin = 'anonymous';
+            imgElement.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = imgElement.width;
+              canvas.height = imgElement.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(imgElement, 0, 0);
+              const base64Data = canvas.toDataURL();
+              const base64ImgElement = document.getElementById(components[index]);
+              base64ImgElement.src = base64Data;
+              resolve();
+            };
+            imgElement.onerror = (error) => {
+              reject(error);
+            };
+            imgElement.src = link;
+          });
+        });
+      
+      return Promise.all(promises).then(
+        ()=>{
+          html2pdf().set(options).from(element).save().then(()=>{
+            window.close()
+
+          });
+        }
+      );
+    }
+
+
+    loadAsBase64([bg,programa,ufv,governo],['bg','programa','ufv','governo'])
+
+  </script>
+</body>
+
+</html>
